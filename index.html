@@ -4,7 +4,48 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>LCARI | Lima Clean Air Research Institute</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js">    function runLCARISimulation() {
+      const station = document.getElementById('simStation').value;
+      const pm25 = parseFloat(document.getElementById('simPM25').value || 0);
+      const hour = parseInt(document.getElementById('simHour').value || 0, 10);
+
+      let risk = 'BAJO';
+      let emoji = '🟢';
+      let message = 'Air quality is safe. Normal school activities can continue.';
+      let action = 'Las actividades escolares pueden continuar con normalidad.';
+
+      if (pm25 > 35) {
+        risk = 'ALTO';
+        emoji = '🔴';
+        message = 'High pollution level detected. Avoid outdoor physical activities and activate LCARI protection protocol.';
+        action = 'Evitar actividad física al aire libre y activar protocolo de protección escolar.';
+      } else if (pm25 > 15) {
+        risk = 'MEDIO';
+        emoji = '🟡';
+        message = 'Moderate pollution detected. Reduce intense outdoor activities and increase classroom ventilation.';
+        action = 'Reducir actividad intensa al aire libre y reforzar ventilación.';
+      }
+
+      if (station === 'Puerta' && hour >= 7 && hour <= 9 && pm25 >= 30) {
+        risk = 'ALTO';
+        emoji = '🔴';
+        message = 'High exposure risk detected near school entrance during peak traffic hours.';
+        action = 'Evitar aglomeraciones en el ingreso y aplicar medidas preventivas.';
+      }
+
+      document.getElementById('simRiskLabel').textContent = 'RIESGO ' + risk;
+      document.getElementById('simRiskShort').textContent = emoji;
+      document.getElementById('simMessage').textContent = message;
+      document.getElementById('simAction').textContent = action;
+      document.getElementById('simLogic').textContent = `Ubicación: ${station}. PM2.5: ${pm25} µg/m³. Hora: ${hour}:00. El sistema prioriza el valor de PM2.5 y refuerza el riesgo si la ubicación es la puerta en hora pico.`;
+
+      const box = document.getElementById('simResultBox');
+      box.classList.remove('low','med','high');
+      if (risk === 'ALTO') box.classList.add('high');
+      else if (risk === 'MEDIO') box.classList.add('med');
+      else box.classList.add('low');
+    }
+  </script>
   <style>
     :root {
       --bg: #04101f;
@@ -112,19 +153,15 @@
       flex-wrap: wrap;
     }
 
-    .nav-links a {
+            .nav-label {
       padding: 10px 14px;
       border-radius: 999px;
       border: 1px solid var(--border);
       color: var(--muted);
       font-size: 14px;
-      transition: .25s ease;
-    }
-
-    .nav-links a:hover {
-      color: white;
-      border-color: rgba(95,212,255,.35);
-      background: rgba(255,255,255,.04);
+      background: rgba(255,255,255,.02);
+      display: inline-flex;
+      align-items: center;
     }
 
     section { padding: 72px 0 0; }
@@ -439,6 +476,18 @@
       margin-top: 14px;
     }
 
+        .image-grid { display:grid; grid-template-columns: repeat(2, 1fr); gap:16px; margin-top:20px; }
+    .photo-card { border:1px solid var(--border); border-radius:20px; overflow:hidden; background:rgba(255,255,255,.03); }
+    .photo-card img { width:100%; height:220px; object-fit:cover; display:block; }
+    .photo-card .caption { padding:14px; color:#c9d7eb; font-size:14px; }
+    .team-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-top:20px; }
+    .team-card { border:1px solid var(--border); border-radius:20px; overflow:hidden; background:rgba(255,255,255,.03); }
+    .team-card img { width:100%; height:250px; object-fit:cover; display:block; }
+    .team-card .body { padding:16px; }
+    .team-card h4 { margin:0 0 6px; color:white; }
+
+    @media (max-width: 1100px) { .image-grid, .team-grid { grid-template-columns:1fr; } }
+
     @media (max-width: 1100px) {
       .hero,
       .grid-2,
@@ -462,21 +511,34 @@
   </style>
 </head>
 <body>
-  <nav class="nav">
+  <!--
+CARPETA SUGERIDA DEL PROYECTO WEB LCARI
+/index.html
+/assets/logo-lcari.png
+/assets/hero-school.jpg
+/assets/sensor-puerta.jpg
+/assets/sensor-patio.jpg
+/assets/sensor-techo.jpg
+/assets/sensor-aula.jpg
+/assets/team-1.jpg
+/assets/team-2.jpg
+/assets/team-3.jpg
+-->
+<nav class="nav">
     <div class="container nav-inner">
       <div class="brand">
-        <div class="logo">LC</div>
+        <div class="logo"><img src="assets/logo-lcari.png" alt="Logo LCARI" style="width:34px;height:34px;object-fit:contain;" onerror="this.style.display='none'; this.parentNode.textContent='LC';"></div>
         <div>
           <small>Climate Research Platform</small>
           <strong>LIMA Clean Air Research Institute</strong>
         </div>
       </div>
       <div class="nav-links">
-        <a href="#problema">Problema</a>
-        <a href="#datos">Datos reales</a>
-        <a href="#piloto">Piloto escolar</a>
-        <a href="#ia">IA y protocolo</a>
-        <a href="#plataforma">Plataforma</a>
+        <span class="nav-label">Problema</span>
+        <span class="nav-label">Datos reales</span>
+        <span class="nav-label">Piloto escolar</span>
+        <span class="nav-label">IA y protocolo</span>
+        <span class="nav-label">Plataforma</span>
       </div>
     </div>
   </nav>
@@ -485,13 +547,16 @@
     <section class="hero">
       <div>
         <div class="eyebrow">Instituto de investigación escolar • Lima, Perú • Proyecto STEAM</div>
+        <div style="margin-bottom:18px;border:1px solid rgba(95,212,255,.14);border-radius:24px;overflow:hidden;max-width:760px;">
+          <img src="assets/hero-school.jpg" alt="Campus escolar LCARI" style="width:100%;height:280px;object-fit:cover;display:block;" onerror="this.style.display='none'; this.parentNode.style.display='none';">
+        </div>
         <h1>Convertimos contaminación <span class="accent">invisible</span> en protección <span class="accent">visible</span> para estudiantes.</h1>
         <p class="lead">
           LCARI es una plataforma de investigación climática escolar que integra sensores, datos oficiales, visualización científica e inteligencia artificial para comprender la calidad del aire en escuelas urbanas y activar decisiones preventivas con impacto social real.
         </p>
         <div class="cta-row">
-          <a class="btn btn-primary" href="#piloto">Explorar piloto escolar</a>
-          <a class="btn btn-secondary" href="#datos">Ver evidencia de Lima</a>
+          <span class="btn btn-primary">Piloto escolar validado</span>
+          <span class="btn btn-secondary">Evidencia ambiental de Lima</span>
         </div>
         <div class="hero-stats">
           <div class="panel stat">
@@ -579,6 +644,11 @@
 
       <div class="kpi-grid" style="margin-top:24px;">
         <div class="kpi">
+          <div class="label">Mapa metropolitano</div>
+          <div class="value">9</div>
+          <div class="hint">distritos monitoreados visualmente</div>
+        </div>
+        <div class="kpi">
           <div class="label">Máximo referencial</div>
           <div class="value">71</div>
           <div class="hint">µg/m³ PM2.5 en estación urbana</div>
@@ -619,6 +689,43 @@
             <div class="chart-wrap small"><canvas id="bulletinChart"></canvas></div>
           </article>
         </div>
+      </div>
+          <div class="grid-2" style="margin-top:24px; align-items:start;">
+        <article class="card"><div class="card-body">
+          <h3>Mapa simplificado de contaminación en Lima</h3>
+          <p class="section-desc" style="margin-top:0; max-width:none;">Visualización referencial construida con base en estaciones urbanas usadas como contexto del proyecto. El objetivo es mostrar al jurado que LCARI se inserta en una problemática metropolitana real.</p>
+          <div class="sensor-map" style="min-height:460px; margin-top:18px;">
+            <div class="sensor-campus"></div>
+            <div class="zone" style="left:60%; top:11%; width:22%;"><span class="zone-title">Puente Piedra</span>PM2.5: 41 • Riesgo alto</div>
+            <div class="zone" style="left:69%; top:42%; width:21%;"><span class="zone-title">San Juan de Lurigancho</span>PM2.5: 53 • Riesgo alto</div>
+            <div class="zone" style="left:53%; top:56%; width:21%;"><span class="zone-title">Santa Anita</span>PM2.5: 61 • Riesgo alto</div>
+            <div class="zone" style="left:37%; top:61%; width:20%;"><span class="zone-title">San Borja</span>PM2.5: 46 • Riesgo alto</div>
+            <div class="zone" style="left:23%; top:51%; width:22%;"><span class="zone-title">Campo de Marte</span>PM2.5: 33 • Riesgo moderado</div>
+            <div class="zone" style="left:46%; top:76%; width:24%;"><span class="zone-title">Villa María del Triunfo</span>PM2.5: 31 • Riesgo moderado</div>
+            <div class="zone" style="left:58%; top:27%; width:20%;"><span class="zone-title">Pariachi</span>PM2.5: 71 • Riesgo alto</div>
+            <div class="zone" style="left:13%; top:33%; width:21%;"><span class="zone-title">SMP</span>PM2.5: 30 • Riesgo moderado</div>
+            <div class="sensor" style="left:69%; top:27%; background: var(--red); box-shadow: 0 0 0 6px rgba(255,107,107,.15), 0 0 18px rgba(255,107,107,.55);"></div>
+            <div class="sensor" style="left:75%; top:48%; background: var(--red); box-shadow: 0 0 0 6px rgba(255,107,107,.15), 0 0 18px rgba(255,107,107,.55);"></div>
+            <div class="sensor" style="left:61%; top:63%; background: var(--red); box-shadow: 0 0 0 6px rgba(255,107,107,.15), 0 0 18px rgba(255,107,107,.55);"></div>
+            <div class="sensor" style="left:45%; top:68%; background: var(--red); box-shadow: 0 0 0 6px rgba(255,107,107,.15), 0 0 18px rgba(255,107,107,.55);"></div>
+            <div class="sensor" style="left:31%; top:57%; background: var(--yellow); box-shadow: 0 0 0 6px rgba(245,200,76,.15), 0 0 18px rgba(245,200,76,.55);"></div>
+            <div class="sensor" style="left:57%; top:83%; background: var(--yellow); box-shadow: 0 0 0 6px rgba(245,200,76,.15), 0 0 18px rgba(245,200,76,.55);"></div>
+            <div class="sensor" style="left:65%; top:34%; background: var(--red); box-shadow: 0 0 0 6px rgba(255,107,107,.15), 0 0 18px rgba(255,107,107,.55);"></div>
+            <div class="sensor" style="left:23%; top:39%; background: var(--yellow); box-shadow: 0 0 0 6px rgba(245,200,76,.15), 0 0 18px rgba(245,200,76,.55);"></div>
+          </div>
+        </div></article>
+
+        <article class="card"><div class="card-body">
+          <h3>Dashboard ejecutivo LCARI</h3>
+          <p>Panel pensado para defensa ante jurado: comunica el estado actual del sistema, el comportamiento por zonas y la lógica de protección escolar.</p>
+          <div class="kpi-grid" style="grid-template-columns:repeat(2,1fr); margin-top:18px;">
+            <div class="kpi"><div class="label">Estado puerta</div><div class="value" style="color:var(--red);">ALTO</div><div class="hint">Alta exposición por tráfico</div></div>
+            <div class="kpi"><div class="label">Estado patio</div><div class="value" style="color:var(--yellow);">MEDIO</div><div class="hint">Precaución en recreo</div></div>
+            <div class="kpi"><div class="label">Estado techo</div><div class="value" style="color:var(--green);">BAJO</div><div class="hint">Punto alto de referencia</div></div>
+            <div class="kpi"><div class="label">Aula CO₂</div><div class="value" style="color:var(--yellow);">1350</div><div class="hint">ppm • Ventilación recomendada</div></div>
+          </div>
+          <div class="chart-wrap small" style="margin-top:20px;"><canvas id="dashboardChart"></canvas></div>
+        </div></article>
       </div>
     </section>
 
@@ -691,6 +798,30 @@
       </div>
     </section>
 
+    <section>
+      <div class="section-tag">Registro visual del piloto</div>
+      <h2 class="section-title">Evidencia fotográfica del sistema LCARI</h2>
+      <p class="section-desc">Estas imágenes refuerzan la credibilidad del piloto. Reemplaza cada archivo por fotografías reales del montaje de sensores y del trabajo del equipo.</p>
+      <div class="image-grid" style="margin-top:24px;">
+        <div class="photo-card">
+          <img src="assets/sensor-puerta.jpg" alt="Sensor en la puerta" onerror="this.style.display='none'; this.parentNode.querySelector('.caption').innerHTML='[Insertar foto real del sensor en la puerta de ingreso]';">
+          <div class="caption">Estación 1 ubicada en la puerta de ingreso para capturar exposición vinculada al tráfico.</div>
+        </div>
+        <div class="photo-card">
+          <img src="assets/sensor-patio.jpg" alt="Sensor en el patio" onerror="this.style.display='none'; this.parentNode.querySelector('.caption').innerHTML='[Insertar foto real del sensor en el patio]';">
+          <div class="caption">Estación 2 en el patio para observar exposición durante recreos y actividad al aire libre.</div>
+        </div>
+        <div class="photo-card">
+          <img src="assets/sensor-techo.jpg" alt="Sensor en el techo" onerror="this.style.display='none'; this.parentNode.querySelector('.caption').innerHTML='[Insertar foto real del sensor en el techo]';">
+          <div class="caption">Estación 3 en el techo como punto alto de referencia comparativa.</div>
+        </div>
+        <div class="photo-card">
+          <img src="assets/sensor-aula.jpg" alt="Sensor en el aula" onerror="this.style.display='none'; this.parentNode.querySelector('.caption').innerHTML='[Insertar foto real del sensor de CO₂ en el aula]';">
+          <div class="caption">Estación interior en aula de secundaria para analizar ventilación y concentración de CO₂.</div>
+        </div>
+      </div>
+    </section>
+
     <section id="ia">
       <div class="section-tag">IA y protocolo</div>
       <h2 class="section-title">La inteligencia artificial no solo clasifica: activa decisiones</h2>
@@ -752,6 +883,49 @@
       </div>
     </section>
 
+    <section>
+      <div class="section-tag">Simulación de IA</div>
+      <h2 class="section-title">Clasificador interactivo de riesgo ambiental</h2>
+      <p class="section-desc">Esta simulación permite mostrar cómo un modelo sencillo e interpretable puede clasificar el nivel de riesgo usando variables del entorno escolar. Es ideal para impresionar al jurado porque hace visible la lógica de decisión del sistema.</p>
+      <div class="grid-2" style="margin-top:24px; align-items:start;">
+        <article class="card"><div class="card-body">
+          <h3>Probar clasificación LCARI</h3>
+          <div class="mini-stack" style="margin-top:14px;">
+            <div class="mini">
+              <h4>Ubicación</h4>
+              <select id="simStation" style="width:100%;padding:12px;border-radius:12px;background:#07192f;color:white;border:1px solid var(--border);">
+                <option value="Puerta">Puerta</option>
+                <option value="Patio">Patio</option>
+                <option value="Techo">Techo</option>
+              </select>
+            </div>
+            <div class="mini">
+              <h4>PM2.5 (µg/m³)</h4>
+              <input id="simPM25" type="number" value="38" style="width:100%;padding:12px;border-radius:12px;background:#07192f;color:white;border:1px solid var(--border);">
+            </div>
+            <div class="mini">
+              <h4>Hora</h4>
+              <input id="simHour" type="number" min="0" max="23" value="8" style="width:100%;padding:12px;border-radius:12px;background:#07192f;color:white;border:1px solid var(--border);">
+            </div>
+            <button type="button" class="btn btn-primary" onclick="runLCARISimulation()">Clasificar riesgo</button>
+          </div>
+        </div></article>
+
+        <article class="card"><div class="card-body">
+          <h3>Resultado del modelo</h3>
+          <div id="simResultBox" class="traffic med" style="margin-top:18px;">
+            <h4 id="simRiskLabel">RIESGO MEDIO</h4>
+            <div class="n" id="simRiskShort">🟡</div>
+            <p id="simMessage">Moderate pollution detected. Reduce intense outdoor activities and increase classroom ventilation.</p>
+          </div>
+          <div class="mini-stack" style="margin-top:16px;">
+            <div class="mini"><h4>Lógica del modelo</h4><p id="simLogic">Si PM2.5 es mayor que 35, el sistema clasifica riesgo alto. Si está entre 16 y 35, clasifica riesgo medio. Si es menor o igual a 15, clasifica riesgo bajo.</p></div>
+            <div class="mini"><h4>Interpretación escolar</h4><p id="simAction">Se recomienda reforzar ventilación y moderar actividades físicas al aire libre.</p></div>
+          </div>
+        </div></article>
+      </div>
+    </section>
+
     <section id="plataforma">
       <div class="section-tag">Plataforma web</div>
       <h2 class="section-title">Diseñada para verse como un instituto de investigación</h2>
@@ -796,6 +970,26 @@
             <span class="tag">Rojo #ff6b6b</span>
           </div>
         </div></article>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-tag">Equipo LCARI</div>
+      <h2 class="section-title">Investigación, tecnología y comunicación en acción</h2>
+      <p class="section-desc">Puedes reemplazar estas tarjetas con nombres, roles y fotos reales del equipo. Esta sección ayuda a reforzar el carácter institucional del proyecto.</p>
+      <div class="team-grid">
+        <div class="team-card">
+          <img src="assets/team-1.jpg" alt="Miembro del equipo 1" onerror="this.style.display='none'; this.parentNode.querySelector('.body').insertAdjacentHTML('afterbegin','<div style=&quot;height:220px;display:grid;place-items:center;color:#9fb5d4;border-bottom:1px solid rgba(255,255,255,.08);&quot;>[Foto del integrante 1]</div>');">
+          <div class="body"><h4>Coordinación científica</h4><p>Responsable de hipótesis, diseño del piloto y análisis general del problema ambiental.</p></div>
+        </div>
+        <div class="team-card">
+          <img src="assets/team-2.jpg" alt="Miembro del equipo 2" onerror="this.style.display='none'; this.parentNode.querySelector('.body').insertAdjacentHTML('afterbegin','<div style=&quot;height:220px;display:grid;place-items:center;color:#9fb5d4;border-bottom:1px solid rgba(255,255,255,.08);&quot;>[Foto del integrante 2]</div>');">
+          <div class="body"><h4>Hardware y sensores</h4><p>Instalación de estaciones, verificación de lecturas y documentación del sistema físico.</p></div>
+        </div>
+        <div class="team-card">
+          <img src="assets/team-3.jpg" alt="Miembro del equipo 3" onerror="this.style.display='none'; this.parentNode.querySelector('.body').insertAdjacentHTML('afterbegin','<div style=&quot;height:220px;display:grid;place-items:center;color:#9fb5d4;border-bottom:1px solid rgba(255,255,255,.08);&quot;>[Foto del integrante 3]</div>');">
+          <div class="body"><h4>Datos e IA</h4><p>Procesamiento en Python, gráficos, semáforo LCARI y soporte para presentación del proyecto.</p></div>
+        </div>
       </div>
     </section>
 
@@ -926,6 +1120,36 @@
         plugins: { tooltip: commonTooltip },
         scales: {
           y: { beginAtZero: true, title: { display: true, text: 'PM2.5 (µg/m³)' } }
+        }
+      }
+    });
+
+    new Chart(document.getElementById('dashboardChart'), {
+      type: 'radar',
+      data: {
+        labels: ['Puerta', 'Patio', 'Techo', 'Aula CO₂', 'Tendencia', 'Respuesta'],
+        datasets: [{
+          label: 'Índice operativo LCARI',
+          data: [90, 62, 28, 58, 74, 80],
+          borderColor: '#5fd4ff',
+          backgroundColor: 'rgba(95,212,255,.18)',
+          pointBackgroundColor: '#5fd4ff',
+          pointRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: commonTooltip },
+        scales: {
+          r: {
+            angleLines: { color: 'rgba(255,255,255,0.08)' },
+            grid: { color: 'rgba(255,255,255,0.08)' },
+            suggestedMin: 0,
+            suggestedMax: 100,
+            pointLabels: { color: '#d8e7fb' },
+            ticks: { display: false }
+          }
         }
       }
     });
